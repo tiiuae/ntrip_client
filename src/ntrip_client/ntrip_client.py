@@ -29,6 +29,7 @@ class NTRIPClient:
   DEFAULT_RECONNECT_ATTEMPT_MAX = 10
   DEFAULT_RECONNECT_ATEMPT_WAIT_SECONDS = 5
   DEFAULT_RTCM_TIMEOUT_SECONDS = 4
+  # mountpoint,
 
   def __init__(self, host, port, mountpoint, ntrip_version, username, password, logerr=logging.error, logwarn=logging.warning, loginfo=logging.info, logdebug=logging.debug):
     # Bit of a strange pattern here, but save the log functions so we can be agnostic of ROS
@@ -98,6 +99,7 @@ class NTRIPClient:
     # Connect the socket to the server
     try:
       self._server_socket.connect((self._host, self._port))
+      self._logwarn("connect socket to server")
     except Exception as e:
       self._logerr(
         'Unable to connect socket to server at http://{}:{}'.format(self._host, self._port))
@@ -120,6 +122,7 @@ class NTRIPClient:
     # Send the HTTP Request
     try:
       self._server_socket.send(self._form_request())
+      self._logwarn("Send the HTTP Request")
     except Exception as e:
       self._logerr(
         'Unable to send request to server at http://{}:{}'.format(self._host, self._port))
@@ -130,6 +133,7 @@ class NTRIPClient:
     response = ''
     try:
       response = self._server_socket.recv(_CHUNK_SIZE).decode('utf-8')
+      self._logwarn("Get the response from the server")
     except Exception as e:
       self._logerr(
         'Unable to read response from server at http://{}:{}'.format(self._host, self._port))
@@ -137,8 +141,11 @@ class NTRIPClient:
       return False
 
     # Properly handle the response
+    # self._logwarn(response)
     if any(success in response for success in _SUCCESS_RESPONSES):
       self._connected = True
+
+    
 
     # Some debugging hints about the kind of error we received
     known_error = False
@@ -322,4 +329,4 @@ class NTRIPClient:
       self._logwarn('Exception: {}'.format(e))
       return False
     return True
->>>>>>> a6fbf88294b5a12abe366bd2a43259ec8d8cf274
+# >>>>>>> a6fbf88294b5a12abe366bd2a43259ec8d8cf274

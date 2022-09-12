@@ -13,6 +13,9 @@ from nmea_msgs.msg import Sentence
 from ntrip_client.ntrip_client import NTRIPClient
 from ntrip_client.nmea_parser import NMEA_DEFAULT_MAX_LENGTH, NMEA_DEFAULT_MIN_LENGTH
 
+from px4_msgs.msg import GpsInjectData
+import numpy as np
+
 # Try to import a couple different types of RTCM messages
 _MAVROS_MSGS_NAME = "mavros_msgs"
 _RTCM_MSGS_NAME = "rtcm_msgs"
@@ -38,7 +41,7 @@ class NTRIPRos(Node):
     self.declare_parameters(
       namespace='',
       parameters=[
-        ('host', '127.0.0.1'),
+        ('host', '172.31.107.47'),
         ('port', 2101),
         ('mountpoint', 'mount'),
         ('ntrip_version', 'None'),
@@ -92,24 +95,26 @@ class NTRIPRos(Node):
     self._rtcm_frame_id = self.get_parameter('rtcm_frame_id').value
 
     # Determine the type of RTCM message that will be published
-    rtcm_message_package = self.get_parameter('rtcm_message_package').value
-    if rtcm_message_package == _MAVROS_MSGS_NAME:
-      if have_mavros_msgs:
-        self._rtcm_message_type = mavros_msgs_RTCM
-        self._create_rtcm_message = self._create_mavros_msgs_rtcm_message
-      else:
-        self.get_logger().fatal('The requested RTCM package {} is a valid option, but we were unable to import it. Please make sure you have it installed'.format(rtcm_message_package))
-    elif rtcm_message_package == _RTCM_MSGS_NAME:
-      if have_rtcm_msgs:
-        self._rtcm_message_type = rtcm_msgs_RTCM
-        self._create_rtcm_message = self._create_rtcm_msgs_rtcm_message
-      else:
-        self.get_logger().fatal('The requested RTCM package {} is a valid option, but we were unable to import it. Please make sure you have it installed'.format(rtcm_message_package))
-    else:
-      self.get_logger().fatal('The RTCM package {} is not a valid option. Please choose between the following packages {}'.format(rtcm_message_package, ','.join([_MAVROS_MSGS_NAME, _RTCM_MSGS_NAME])))
+    # rtcm_message_package = self.get_parameter('rtcm_message_package').value
+    # if rtcm_message_package == _MAVROS_MSGS_NAME:
+    #   if have_mavros_msgs:
+    #     self._rtcm_message_type = mavros_msgs_RTCM
+    #     self._create_rtcm_message = self._create_mavros_msgs_rtcm_message
+    #   else:
+    #     self.get_logger().fatal('The requested RTCM package {} is a valid option, but we were unable to import it. Please make sure you have it installed'.format(rtcm_message_package))
+    # elif rtcm_message_package == _RTCM_MSGS_NAME:
+    #   if have_rtcm_msgs:
+    #     self._rtcm_message_type = rtcm_msgs_RTCM
+    #     self._create_rtcm_message = self._create_rtcm_msgs_rtcm_message
+    #   else:
+    #     self.get_logger().fatal('The requested RTCM package {} is a valid option, but we were unable to import it. Please make sure you have it installed'.format(rtcm_message_package))
+    # else:
+    #   self.get_logger().fatal('The RTCM package {} is not a valid option. Please choose between the following packages {}'.format(rtcm_message_package, ','.join([_MAVROS_MSGS_NAME, _RTCM_MSGS_NAME])))
 
+    self._rtcm_message_type = GpsInjectData
+    self._create_rtcm_message = self._create_px4_msgs_rtcm_messages
     # Setup the RTCM publisher
-    self._rtcm_pub = self.create_publisher(self._rtcm_message_type, 'rtcm', 10)
+    self._rtcm_pub = self.create_publisher(self._rtcm_message_type, 'fmu/gps_inject_data/in', 1000)
 
     # Initialize the client
     self._client = NTRIPClient(
@@ -172,6 +177,7 @@ class NTRIPRos(Node):
 
   def publish_rtcm(self):
     for raw_rtcm in self._client.recv_rtcm():
+      # self.get_logger().info(type(raw_rtcm))
       self._rtcm_pub.publish(self._create_rtcm_message(raw_rtcm))
 
   def _create_mavros_msgs_rtcm_message(self, rtcm):
@@ -190,6 +196,14 @@ class NTRIPRos(Node):
         frame_id=self._rtcm_frame_id
       ),
       message=rtcm
+    )
+
+  def _create_px4_msgs_rtcm_messages(self, rtcm):
+    rtcm = np.frombuffer(rtcm, dtype=np.uint8)
+    self.get_logger().fatal(' package length {}'.format(len(rtcm)))
+    
+    return GpsInjectData(
+      data=rtcm[:182]
     )
 
 if __name__ == '__main__':

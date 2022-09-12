@@ -76,6 +76,7 @@ class RTCMParser:
         message_length = (combined_buffer[index + 1] << 8 | combined_buffer[index + 2]) & 0x03FF
         if index + message_length + 6 <= len(combined_buffer):
           # Grab the packet from the buffer, and verify that it is valid by comparing checksums
+          self._logdebug('inside index message length')
           packet = combined_buffer[index:index + message_length + 6]
           expected_checksum = packet[-3] << 16 | packet[-2] << 8 | packet[-1]
           actual_checksum = self._checksum(packet[:-3])
@@ -109,6 +110,7 @@ class RTCMParser:
         self._buffer = self._buffer[:_MAX_BUFFER_SIZE]
 
     # Return the RTCM packets we found
+    print(rtcm_packets)
     return rtcm_packets
     
   def _checksum(self, packet):
