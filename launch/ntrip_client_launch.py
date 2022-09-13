@@ -4,11 +4,15 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 from launch.substitutions import EnvironmentVariable
 from launch.actions import SetEnvironmentVariable
+import os
+
+DRONE_DEVICE_ID=os.environ["DRONE_DEVICE_ID"]
+RTK_SERVER_IP_ADDRESS=os.environ["RTK_SERVER_IP_ADDRESS"]
 
 def generate_launch_description():
       return LaunchDescription([
           # Declare arguments with default values
-          DeclareLaunchArgument('host',                  default_value='172.31.107.47'),
+          DeclareLaunchArgument('host',                  default_value=RTK_SERVER_IP_ADDRESS),
           DeclareLaunchArgument('port',                  default_value='2101'),
           DeclareLaunchArgument('mountpoint',            default_value='UBLOXSSRC'),
           DeclareLaunchArgument('ntrip_version',         default_value='None'),
@@ -30,7 +34,8 @@ def generate_launch_description():
           # ****************************************************************** 
           Node(
                 name='ntrip_client_node',
-                namespace='$(env DRONE_DEVICE_ID)',
+                # namespace='$(env DRONE_DEVICE_ID)',
+                namespace=DRONE_DEVICE_ID,
                 package='ntrip_client',
                 executable='ntrip_ros.py',
                 parameters=[

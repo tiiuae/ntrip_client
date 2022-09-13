@@ -115,6 +115,8 @@ class NTRIPRos(Node):
     self._create_rtcm_message = self._create_px4_msgs_rtcm_messages
     # Setup the RTCM publisher
     self._rtcm_pub = self.create_publisher(self._rtcm_message_type, 'fmu/gps_inject_data/in', 1000)
+    # self._rtcm_pub = self.create_publisher(self._rtcm_message_type, 'rtcm', 1000)
+
 
     # Initialize the client
     self._client = NTRIPClient(
@@ -201,8 +203,12 @@ class NTRIPRos(Node):
   def _create_px4_msgs_rtcm_messages(self, rtcm):
     rtcm = np.frombuffer(rtcm, dtype=np.uint8)
     self.get_logger().fatal(' package length {}'.format(len(rtcm)))
+    extend_array = np.zeros(300)
+    rtcm = np.append(rtcm,extend_array)
     
     return GpsInjectData(
+      # timestamp=self.get_clock().now().to_msg(),
+      # len=len(rtcm),
       data=rtcm[:182]
     )
 
