@@ -202,13 +202,13 @@ class NTRIPRos(Node):
 
   def _create_px4_msgs_rtcm_messages(self, rtcm):
     rtcm = np.frombuffer(rtcm, dtype=np.uint8)
-    self.get_logger().fatal(' package length {}'.format(len(rtcm)))
+    self.get_logger().info(' package length {}'.format(len(rtcm)))
     extend_array = np.zeros(300)
     rtcm = np.append(rtcm,extend_array)
     
     return GpsInjectData(
-      # timestamp=self.get_clock().now().to_msg(),
-      # len=len(rtcm),
+      timestamp=self.get_clock().now().nanoseconds,
+      len=len(rtcm),
       data=rtcm[:182]
     )
 
