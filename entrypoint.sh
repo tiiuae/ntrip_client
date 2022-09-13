@@ -1,9 +1,5 @@
 #!/bin/bash -e
 
-. /enclave/drone_device_id
-
-export DRONE_DEVICE_ID
-
 source /opt/ros/galactic/setup.bash
 
 # The mesh-com project had issues resolving packages without this.
