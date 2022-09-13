@@ -209,7 +209,7 @@ class NTRIPRos(Node):
     return GpsInjectData(
       timestamp=self.get_clock().now().nanoseconds,      
       len=182,
-      data=rtcm[:182],
+      data=rtcm[:182]
     )
 
 if __name__ == '__main__':
