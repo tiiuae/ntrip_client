@@ -93,24 +93,6 @@ class NTRIPRos(Node):
 
     # Read an optional Frame ID from the config
     self._rtcm_frame_id = self.get_parameter('rtcm_frame_id').value
-
-    # Determine the type of RTCM message that will be published
-    # rtcm_message_package = self.get_parameter('rtcm_message_package').value
-    # if rtcm_message_package == _MAVROS_MSGS_NAME:
-    #   if have_mavros_msgs:
-    #     self._rtcm_message_type = mavros_msgs_RTCM
-    #     self._create_rtcm_message = self._create_mavros_msgs_rtcm_message
-    #   else:
-    #     self.get_logger().fatal('The requested RTCM package {} is a valid option, but we were unable to import it. Please make sure you have it installed'.format(rtcm_message_package))
-    # elif rtcm_message_package == _RTCM_MSGS_NAME:
-    #   if have_rtcm_msgs:
-    #     self._rtcm_message_type = rtcm_msgs_RTCM
-    #     self._create_rtcm_message = self._create_rtcm_msgs_rtcm_message
-    #   else:
-    #     self.get_logger().fatal('The requested RTCM package {} is a valid option, but we were unable to import it. Please make sure you have it installed'.format(rtcm_message_package))
-    # else:
-    #   self.get_logger().fatal('The RTCM package {} is not a valid option. Please choose between the following packages {}'.format(rtcm_message_package, ','.join([_MAVROS_MSGS_NAME, _RTCM_MSGS_NAME])))
-
     self._rtcm_message_type = GpsInjectData
     self._create_rtcm_message = self._create_px4_msgs_rtcm_messages
     # Setup the RTCM publisher
@@ -157,7 +139,7 @@ class NTRIPRos(Node):
       self.get_logger().error('Unable to connect to NTRIP server')
       return False
     # Setup our subscriber
-    self._nmea_sub = self.create_subscription(Sentence, 'nmea', self.subscribe_nmea, 10)
+    # self._nmea_sub = self.create_subscription(Sentence, 'nmea', self.subscribe_nmea, 10)
 
     # Start the timer that will check for RTCM data
     self._rtcm_timer = self.create_timer(0.1, self.publish_rtcm)
@@ -179,7 +161,6 @@ class NTRIPRos(Node):
 
   def publish_rtcm(self):
     for raw_rtcm in self._client.recv_rtcm():
-      # self.get_logger().info(type(raw_rtcm))
       self._rtcm_pub.publish(self._create_rtcm_message(raw_rtcm))
 
   def _create_mavros_msgs_rtcm_message(self, rtcm):
@@ -208,8 +189,7 @@ class NTRIPRos(Node):
     
     return GpsInjectData(
       timestamp=self.get_clock().now().nanoseconds,      
-      len=182,
-      data=rtcm[:182]
+      data=rtcm[:300]
     )
 
 if __name__ == '__main__':

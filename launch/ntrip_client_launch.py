@@ -9,6 +9,9 @@ import os
 DRONE_DEVICE_ID=os.environ["DRONE_DEVICE_ID"]
 RTK_SERVER_IP_ADDRESS=os.environ["RTK_SERVER_IP_ADDRESS"]
 
+# DRONE_DEVICE_ID="uaeci06"
+# RTK_SERVER_IP_ADDRESS="172.31.107.47"
+
 def generate_launch_description():
       return LaunchDescription([
           # Declare arguments with default values
@@ -34,10 +37,10 @@ def generate_launch_description():
           # ****************************************************************** 
           Node(
                 name='ntrip_client_node',
-                # namespace='$(env DRONE_DEVICE_ID)',
                 namespace=DRONE_DEVICE_ID,
                 package='ntrip_client',
                 executable='ntrip_ros.py',
+                emulate_tty=True,
                 parameters=[
                   {
                     # Required parameters used to connect to the NTRIP server
