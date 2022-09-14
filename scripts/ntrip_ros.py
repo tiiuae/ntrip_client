@@ -188,7 +188,8 @@ class NTRIPRos(Node):
     rtcm = np.append(rtcm,extend_array)
     
     return GpsInjectData(
-      timestamp=self.get_clock().now().nanoseconds,      
+      timestamp=self.get_clock().now().nanoseconds,
+      len=len(rtcm),      
       data=rtcm[:300]
     )
 
