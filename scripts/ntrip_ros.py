@@ -16,6 +16,8 @@ from ntrip_client.nmea_parser import NMEA_DEFAULT_MAX_LENGTH, NMEA_DEFAULT_MIN_L
 from px4_msgs.msg import GpsInjectData
 import numpy as np
 
+MAX_LEN = 182
+
 # Try to import a couple different types of RTCM messages
 _MAVROS_MSGS_NAME = "mavros_msgs"
 _RTCM_MSGS_NAME = "rtcm_msgs"
@@ -184,14 +186,14 @@ class NTRIPRos(Node):
   def _create_px4_msgs_rtcm_messages(self, rtcm):
     rtcm = np.frombuffer(rtcm, dtype=np.uint8)
     self.get_logger().info(' package length {}'.format(len(rtcm)))
-    len_rtcm=min(len(rtcm),255)
+    len_rtcm=min(len(rtcm),MAX_LEN)
     extend_array = np.zeros(300)
     rtcm = np.append(rtcm,extend_array)
     
     return GpsInjectData(
       timestamp=self.get_clock().now().nanoseconds,
       len=len_rtcm,      
-      data=rtcm[:300]
+      data=rtcm[:MAX_LEN]
     )
 
 if __name__ == '__main__':
