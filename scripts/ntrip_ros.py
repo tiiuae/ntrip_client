@@ -212,7 +212,7 @@ class NTRIPRos(Node):
 
           start += length
 
-      # self._sequenceId += 1 
+      self._sequenceId += 1 
     
 
 if __name__ == '__main__':
