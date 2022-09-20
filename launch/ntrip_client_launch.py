@@ -6,11 +6,11 @@ from launch.substitutions import EnvironmentVariable
 from launch.actions import SetEnvironmentVariable
 import os
 
-DRONE_DEVICE_ID=os.environ["DRONE_DEVICE_ID"]
-RTK_SERVER_IP_ADDRESS=os.environ["RTK_SERVER_IP_ADDRESS"]
+# DRONE_DEVICE_ID=os.environ["DRONE_DEVICE_ID"]
+# RTK_SERVER_IP_ADDRESS=os.environ["RTK_SERVER_IP_ADDRESS"]
 
-# DRONE_DEVICE_ID="uaeci06"
-# RTK_SERVER_IP_ADDRESS="172.31.107.47"
+DRONE_DEVICE_ID="uaeci06"
+RTK_SERVER_IP_ADDRESS="172.31.107.210"
 
 def generate_launch_description():
       return LaunchDescription([
