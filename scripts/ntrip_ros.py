@@ -69,6 +69,8 @@ class NTRIPRos(Node):
     port = self.get_parameter('port').value
     mountpoint = self.get_parameter('mountpoint').value
 
+    self._sequenceId = 0
+
     # Optionally get the ntrip version from the launch file
     ntrip_version = self.get_parameter('ntrip_version').value
     if ntrip_version == 'None':
@@ -96,7 +98,7 @@ class NTRIPRos(Node):
     # Read an optional Frame ID from the config
     self._rtcm_frame_id = self.get_parameter('rtcm_frame_id').value
     self._rtcm_message_type = GpsInjectData
-    self._create_rtcm_message = self._create_px4_msgs_rtcm_messages
+    # self._create_rtcm_message = self._create_px4_msgs_rtcm_messages
     # Setup the RTCM publisher
     self._rtcm_pub = self.create_publisher(self._rtcm_message_type, 'fmu/gps_inject_data/in', 1000)
     # self._rtcm_pub = self.create_publisher(self._rtcm_message_type, 'rtcm', 1000)
@@ -163,38 +165,55 @@ class NTRIPRos(Node):
 
   def publish_rtcm(self):
     for raw_rtcm in self._client.recv_rtcm():
-      self._rtcm_pub.publish(self._create_rtcm_message(raw_rtcm))
 
-  def _create_mavros_msgs_rtcm_message(self, rtcm):
-    return mavros_msgs_RTCM(
-      header=Header(
-        stamp=self.get_clock().now().to_msg(),
-        frame_id=self._rtcm_frame_id
-      ),
-      data=rtcm
-    )
+      rtcm = np.frombuffer(raw_rtcm, dtype=np.uint8)
+      len_rtcm = len(rtcm)
+      self.get_logger().info(' package length {}'.format(len_rtcm))    
 
-  def _create_rtcm_msgs_rtcm_message(self, rtcm):
-    return rtcm_msgs_RTCM(
-      header=Header(
-        stamp=self.get_clock().now().to_msg(),
-        frame_id=self._rtcm_frame_id
-      ),
-      message=rtcm
-    )
+      if (len_rtcm < MAX_LEN):
+        extend_array = np.zeros(MAX_LEN)
+        rtcm = np.append(rtcm,extend_array)    
 
-  def _create_px4_msgs_rtcm_messages(self, rtcm):
-    rtcm = np.frombuffer(rtcm, dtype=np.uint8)
-    self.get_logger().info(' package length {}'.format(len(rtcm)))
-    len_rtcm=min(len(rtcm),MAX_LEN)
-    extend_array = np.zeros(300)
-    rtcm = np.append(rtcm,extend_array)
+        msg=GpsInjectData(
+        timestamp=self.get_clock().now().nanoseconds,
+        flags = (self._sequenceId & 0x1F) << 3,
+        len=len_rtcm,      
+        data=rtcm[:MAX_LEN]
+        )
+
+        self._rtcm_pub.publish(msg)
+
+      else:
+        fragmentId = 0
+        start = 0
+        while (start < len_rtcm):
+          length = min(len_rtcm - start, MAX_LEN)
+
+          fragmentId += 1
+          _flags = 1
+          _flags |= fragmentId << 1
+          _flags |= (self._sequenceId & 0x1F) << 3
+          
+          if (len(rtcm[start:start+length]) < MAX_LEN):
+            extend_array = np.zeros(MAX_LEN)
+            rtcm = np.append(rtcm[start:start+length],extend_array)            
+            _data=rtcm[:MAX_LEN]
+          else:
+            _data=rtcm[start:start+length]
+
+          msg=GpsInjectData(
+          timestamp=self.get_clock().now().nanoseconds,
+          flags = _flags,
+          len=length,      
+          data=_data
+          )
+          
+          self._rtcm_pub.publish(msg)
+
+          start += length
+
+      self._sequenceId += 1 
     
-    return GpsInjectData(
-      timestamp=self.get_clock().now().nanoseconds,
-      len=len_rtcm,      
-      data=rtcm[:MAX_LEN]
-    )
 
 if __name__ == '__main__':
   # Start the node
