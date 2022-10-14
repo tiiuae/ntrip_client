@@ -100,7 +100,7 @@ class NTRIPRos(Node):
     self._rtcm_message_type = GpsInjectData
     # self._create_rtcm_message = self._create_px4_msgs_rtcm_messages
     # Setup the RTCM publisher
-    self._rtcm_pub = self.create_publisher(self._rtcm_message_type, 'fmu/gps_inject_data/in', 1000)
+    self._rtcm_pub = self.create_publisher(self._rtcm_message_type, '/fmu/in/gps_inject_data', 1000)
     # self._rtcm_pub = self.create_publisher(self._rtcm_message_type, 'rtcm', 1000)
 
 
