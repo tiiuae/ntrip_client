@@ -170,6 +170,10 @@ class NTRIPRos(Node):
       len_rtcm = len(rtcm)
       self.get_logger().info(' package length {}'.format(len_rtcm))    
 
+      if (len_rtcm > 255):  # Even though the message can have size of 300, len must be between [0,255]
+        self.get_logger().info('  Dropping....')   
+        continue
+
       if (len_rtcm < MAX_LEN):
         extend_array = np.zeros(MAX_LEN)
         rtcm = np.append(rtcm,extend_array)    
