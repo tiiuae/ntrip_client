@@ -2,9 +2,6 @@
 
 source /opt/ros/humble/setup.bash
 
-# The mesh-com project had issues resolving packages without this.
-export PYTHONPATH=/opt/ros/humble/lib/python3.8/site-packages
-
 echo "Starting the RTK GPS client (ntrip_client)"
 
 mkdir -p ~/.ros/log
