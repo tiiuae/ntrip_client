@@ -1,4 +1,4 @@
-FROM ghcr.io/tiiuae/fog-ros-baseimage-builder:sha-b1c9665 AS builder
+FROM ghcr.io/tiiuae/fog-ros-baseimage-builder:v2.1.0 AS builder
 
 # Install build dependencies
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
@@ -21,7 +21,7 @@ RUN /packaging/build.sh
 #  ▲               runtime ──┐
 #  └── build                 ▼
 
-FROM ghcr.io/tiiuae/fog-ros-baseimage:sha-b1c9665
+FROM ghcr.io/tiiuae/fog-ros-baseimage:v2.1.0
 
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
     ros-${ROS_DISTRO}-mavros-msgs \
