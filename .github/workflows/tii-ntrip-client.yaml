@@ -1,23 +1,33 @@
-name: tii-ntrip-client-riscv64
+name: tii-ntrip-client
 
 on:
-  # repository_dispatch:
-  #   types: [fog-ros-baseimage-update]
+  repository_dispatch:
+    types: [fog-ros-baseimage-update]
   push:
     branches: [riscv64_support]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - dockerfile: ./Dockerfile
+            architecture: amd64
+          - dockerfile: ./Dockerfile.riscv64
+            architecture: riscv64
+    outputs:
+      short_git_sha: ${{ steps.vars.outputs.SHORT_GIT_SHA }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
         with:
-          platform: riscv64
+          platforms: amd64,riscv64
 
       - name: Set up Docker Buildx
         id: buildx
@@ -54,11 +64,34 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build container image and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v4
         with:
           context: .
-          file: Dockerfile.riscv64
-          platforms: linux/riscv64
           push: true
+          file: ${{ matrix.dockerfile }}
+          platforms: linux/${{ matrix.architecture }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          # Disables attestation so it may be needed in the future.
+          # Needed because we have to create a manifest list in the next job.
+          provenance: false
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create combined image
+        run: |
+          docker manifest create ghcr.io/tiiuae/tii-ntrip-client:sha-${{ needs.build.outputs.short_git_sha }} \
+            --amend ghcr.io/tiiuae/tii-ntrip-client:sha-${{ needs.build.outputs.short_git_sha }}-amd64 \
+            --amend ghcr.io/tiiuae/tii-ntrip-client:sha-${{ needs.build.outputs.short_git_sha }}-riscv64
+      - name: Push image to the registry
+        run: |
+          docker manifest push ghcr.io/tiiuae/tii-ntrip-client:sha-${{ needs.build.outputs.short_git_sha }}
+
