@@ -33,6 +33,12 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v2
 
+      - name: Set short git commit SHA
+        id: vars
+        run: |
+          calculatedSha=$(git rev-parse --short ${{ github.sha }})
+          echo "SHORT_GIT_SHA=$calculatedSha" >> $GITHUB_OUTPUT
+
       - name: Set image tag format without suffix
         run: |
           echo "IMAGE_TAG_FORMAT=type=sha" >> $GITHUB_ENV
