@@ -1,4 +1,4 @@
-FROM ghcr.io/tiiuae/fog-ros-baseimage-builder:sha-2dc22ac AS builder
+FROM ghcr.io/tiiuae/fog-ros-baseimage-builder:sha-d2b88ff AS builder
 
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
@@ -15,7 +15,7 @@ RUN /packaging/build_colcon.sh
 # #  ▲               runtime ──┐
 # #  └── build                 ▼
 
-FROM ghcr.io/tiiuae/fog-ros-baseimage:sha-2dc22ac
+FROM ghcr.io/tiiuae/fog-ros-baseimage:sha-d2b88ff
 
 RUN apt-get update \
     && apt-get install -y \
