@@ -4,7 +4,7 @@ on:
   repository_dispatch:
     types: [fog-ros-baseimage-update]
   push:
-    branches: [riscv64_support]
+
 
 jobs:
   build:
