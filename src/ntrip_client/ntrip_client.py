@@ -94,7 +94,7 @@ class NTRIPClient:
   def connect(self):
     # Create a socket object that we will use to connect to the server
     self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    self._server_socket.settimeout(5)
+    self._server_socket.settimeout(15)
 
     # Connect the socket to the server
     try:
