@@ -83,7 +83,7 @@ def generate_launch_description():
                     'reconnect_attempt_wait_seconds': 5,
 
                     # How many seconds is acceptable in between receiving RTCM. If RTCM is not received for this duration, the node will attempt to reconnect
-                    'rtcm_timeout_seconds': 4
+                    'rtcm_timeout_seconds': 15  
                   }
                 ],
                 # Uncomment the following section and replace "/gq7/nmea/sentence" with the topic you are sending NMEA on if it is not the one we requested
