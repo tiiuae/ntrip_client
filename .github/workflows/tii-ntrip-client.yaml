@@ -5,6 +5,9 @@ on:
     types: [fog-ros-baseimage-update]
   push:
 
+permissions:
+  contents: read
+  packages: write
 
 jobs:
   build:
