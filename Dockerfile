@@ -1,4 +1,4 @@
-FROM ghcr.io/tiiuae/fog-ros-baseimage-builder:sha-f8defd3 AS builder
+FROM ghcr.io/tiiuae/fog-ros-baseimage:feat-multiarch-pkcs11 AS builder
 
 COPY . $SRC_DIR/ntrip_client
 
@@ -7,7 +7,7 @@ RUN /packaging/build_colcon.sh
 #  ▲               runtime ──┐
 #  └── build                 ▼
 
-FROM ghcr.io/tiiuae/fog-ros-baseimage:sha-f8defd3
+FROM ghcr.io/tiiuae/fog-ros-baseimage:feat-multiarch-pkcs11
 
 RUN apt-get update \
     && apt-get install -y \
