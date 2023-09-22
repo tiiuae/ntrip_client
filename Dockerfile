@@ -1,17 +1,13 @@
-# Given dynamically from CI job.
-FROM --platform=${BUILDPLATFORM:-linux/amd64} ghcr.io/tiiuae/fog-ros-sdk:sha-f8defd3-${TARGETARCH:-amd64} AS builder
-
-# Must be defined another time after "FROM" keyword.
-ARG TARGETARCH
+FROM ghcr.io/tiiuae/fog-ros-baseimage-builder:sha-6d67ecf AS builder
 
 COPY . $SRC_DIR/ntrip_client
 
-RUN /packaging/build_colcon_sdk.sh ${TARGETARCH:-amd64}
+RUN /packaging/build_colcon.sh
 
 #  ▲               runtime ──┐
 #  └── build                 ▼
 
-FROM ghcr.io/tiiuae/fog-ros-baseimage:feat-multiarch-pkcs11
+FROM ghcr.io/tiiuae/fog-ros-baseimage:sha-6d67ecf
 
 RUN apt-get update \
     && apt-get install -y \
