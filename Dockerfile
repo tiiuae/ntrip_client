@@ -1,37 +1,23 @@
-FROM ghcr.io/tiiuae/fog-ros-baseimage-builder:v2.1.0 AS builder
+# Given dynamically from CI job.
+FROM --platform=${BUILDPLATFORM:-linux/amd64} ghcr.io/tiiuae/fog-ros-sdk:v3.0.1-${TARGETARCH:-amd64} AS builder
 
-# Install build dependencies
-RUN apt-get update -y && apt-get install -y --no-install-recommends \
-    curl \
-    python3-bloom \
-    fakeroot \
-    dh-make \
-    dh-python \
-    python3-pytest \
-    && rm -rf /var/lib/apt/lists/*
+# Must be defined another time after "FROM" keyword.
+ARG TARGETARCH
 
-# Build mesh_com
-COPY . /main_ws/src/
+COPY . $SRC_DIR/ntrip_client
 
-# this:
-# 1) builds the application
-# 2) packages the application as .deb in /main_ws/
-RUN /packaging/build.sh
+RUN /packaging/build_colcon_sdk.sh ${TARGETARCH:-amd64}
 
 #  ▲               runtime ──┐
 #  └── build                 ▼
 
-FROM ghcr.io/tiiuae/fog-ros-baseimage:v2.1.0
+FROM ghcr.io/tiiuae/fog-ros-baseimage:v3.0.1
 
-RUN apt-get update -y && apt-get install -y --no-install-recommends \
-    ros-${ROS_DISTRO}-mavros-msgs \
-    ros-${ROS_DISTRO}-nmea-msgs \
+RUN apt-get update \
+    && apt-get install -y \
+        nmea-msgs \
     && rm -rf /var/lib/apt/lists/*
 
-ENTRYPOINT [ "/entrypoint.sh" ]
+ENTRYPOINT ros-with-env ros2 launch ntrip_client ntrip_client_launch.py
 
-COPY entrypoint.sh /entrypoint.sh
-
-COPY --from=builder /main_ws/ros-*-ntrip-client_*_amd64.deb /ntrip_client.deb
-
-RUN dpkg -i /ntrip_client.deb && rm /ntrip_client.deb
+COPY --from=builder $INSTALL_DIR $INSTALL_DIR
