@@ -103,6 +103,7 @@ class NTRIPRos(Node):
     self._rtcm_pub = self.create_publisher(self._rtcm_message_type, '/fmu/in/GpsInjectData', 1000)
     # self._rtcm_pub = self.create_publisher(self._rtcm_message_type, 'rtcm', 1000)
 
+    self.get_logger().warning('Workaround print so we get a connection to RTK server.')
 
     # Initialize the client
     self._client = NTRIPClient(
