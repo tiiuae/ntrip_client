@@ -30,6 +30,16 @@ if importlib.util.find_spec(_RTCM_MSGS_NAME) is not None:
   have_rtcm_msgs = True
   from rtcm_msgs.msg import Message as rtcm_msgs_RTCM
 
+
+rtcm_message_types = {
+  1005: '1005 - Stationary RTK reference station ARP',
+  1077: '1077 - GPS MSM7',
+  1087: '1087 - GLONASS MSM7',
+  1097: '1097 - Galileo MSM7',
+  1127: '1127 - BeiDou MSM7',
+  1230: '1230 - GLONASS code-phase biases'
+}
+
 class NTRIPRos(Node):
   def __init__(self):
     # Read a debug flag from the environment that should have been set by the launch file
@@ -169,11 +179,16 @@ class NTRIPRos(Node):
 
       rtcm = np.frombuffer(raw_rtcm, dtype=np.uint8)
       len_rtcm = len(rtcm)
-      self.get_logger().info(' package length {}'.format(len_rtcm))    
 
-      if (len_rtcm > 255):  # Even though the message can have size of 300, len must be between [0,255]
-        self.get_logger().info('  Dropping....')   
-        continue
+      # Extract the message type from the first 12 bits of the message
+      msg_type = int.from_bytes(rtcm[:2], byteorder='big') >> 4
+      msg_type_description = rtcm_message_types.get(msg_type, f'Unknown RTCM message type: {msg_type}')
+
+      self.get_logger().info(' package length {:3}, RTCM message: {}'.format(len_rtcm, msg_type_description))
+
+      # if (len_rtcm > 255):  # Even though the message can have size of 300, len must be between [0,255]
+      #   self.get_logger().info('  Dropping....')
+      #   continue
 
       if (len_rtcm < MAX_LEN):
         extend_array = np.zeros(MAX_LEN)
@@ -184,6 +199,16 @@ class NTRIPRos(Node):
         flags = (self._sequenceId & 0x1F) << 3,
         len=len_rtcm,      
         data=rtcm[:MAX_LEN]
+        )
+
+        self._rtcm_pub.publish(msg)
+
+      elif (len_rtcm == MAX_LEN):
+        msg=GpsInjectData(
+        timestamp=self.get_clock().now().nanoseconds,
+        flags = (self._sequenceId & 0x1F) << 3,
+        len=len_rtcm,
+        data=rtcm
         )
 
         self._rtcm_pub.publish(msg)
