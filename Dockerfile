@@ -18,6 +18,7 @@ RUN apt-get update \
         nmea-msgs \
     && rm -rf /var/lib/apt/lists/*
 
-ENTRYPOINT ros-with-env ros2 launch ntrip_client ntrip_client_launch.py
+COPY entrypoint.sh /entrypoint.sh
+ENTRYPOINT [ "/entrypoint.sh" ]
 
 COPY --from=builder $INSTALL_DIR $INSTALL_DIR

@@ -30,6 +30,21 @@ if importlib.util.find_spec(_RTCM_MSGS_NAME) is not None:
   have_rtcm_msgs = True
   from rtcm_msgs.msg import Message as rtcm_msgs_RTCM
 
+
+rtcm_message_types = {
+  1005: '1005 - Stationary RTK reference station ARP',
+  1074: '1074 - GPS MSM4',
+  1077: '1077 - GPS MSM7',
+  1084: '1084 - GLONASS MSM4',
+  1087: '1087 - GLONASS MSM7',
+  1094: '1094 - Galileo MSM4',
+  1097: '1097 - Galileo MSM7',
+  1124: '1124 - BeiDou MSM4',
+  1127: '1127 - BeiDou MSM7',
+  1230: '1230 - GLONASS code-phase biases',
+  4072: '4072 - Reference station PVT (u-blox proprietary RTCM message)',
+}
+
 class NTRIPRos(Node):
   def __init__(self):
     # Read a debug flag from the environment that should have been set by the launch file
@@ -103,6 +118,7 @@ class NTRIPRos(Node):
     self._rtcm_pub = self.create_publisher(self._rtcm_message_type, '/fmu/in/GpsInjectData', 1000)
     # self._rtcm_pub = self.create_publisher(self._rtcm_message_type, 'rtcm', 1000)
 
+    self.get_logger().warning('Workaround print so we get a connection to RTK server.')
 
     # Initialize the client
     self._client = NTRIPClient(
@@ -168,13 +184,18 @@ class NTRIPRos(Node):
 
       rtcm = np.frombuffer(raw_rtcm, dtype=np.uint8)
       len_rtcm = len(rtcm)
-      self.get_logger().info(' package length {}'.format(len_rtcm))    
 
-      if (len_rtcm > 255):  # Even though the message can have size of 300, len must be between [0,255]
-        self.get_logger().info('  Dropping....')   
+      rtcm_msg_len = 256 * rtcm[1] + rtcm[2]
+      rtcm_msg_no = int((256 * rtcm[3] + rtcm[4]) / 16)
+      msg_type_description = rtcm_message_types.get(rtcm_msg_no, f'Unknown RTCM message type: {rtcm_msg_no}')
+
+      self.get_logger().info(' package length {:3} ({:3}), Type: {}'.format(len_rtcm, rtcm_msg_len, msg_type_description))
+
+      if (len_rtcm > MAX_LEN):  # Even though the message can have size of 300, len must be between [0,255]
+        self.get_logger().info('  Dropping....')
         continue
 
-      if (len_rtcm < MAX_LEN):
+      if (len_rtcm <= MAX_LEN):
         extend_array = np.zeros(MAX_LEN)
         rtcm = np.append(rtcm,extend_array)    
 
@@ -188,6 +209,7 @@ class NTRIPRos(Node):
         self._rtcm_pub.publish(msg)
 
       else:
+        # not used as dropping the messages with length > 300
         fragmentId = 0
         start = 0
         while (start < len_rtcm):
@@ -216,7 +238,9 @@ class NTRIPRos(Node):
 
           start += length
 
-      self._sequenceId += 1 
+      self._sequenceId += 1
+      if self._sequenceId > 31:
+        self._sequenceId = 0
     
 
 if __name__ == '__main__':
