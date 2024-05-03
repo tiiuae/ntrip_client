@@ -33,6 +33,8 @@ trap - TERM
 wait $child
 RESULT=$?
 
+/pkcs11-closer --label ntrip-client
+
 if [ $RESULT -ne 0 ]; then
     echo "ERROR: ntrip node failed with code $RESULT" >&2
     exit $RESULT
