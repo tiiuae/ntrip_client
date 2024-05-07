@@ -11,6 +11,8 @@ RUN /packaging/build_colcon_sdk.sh ${TARGETARCH:-amd64}
 #  ▲               runtime ──┐
 #  └── build                 ▼
 
+FROM ghcr.io/tiiuae/pkcs11-closer:sha-7bec028 AS closer
+
 FROM ghcr.io/tiiuae/fog-ros-baseimage:v3.2.0
 
 RUN apt-get update \
@@ -21,4 +23,5 @@ RUN apt-get update \
 COPY entrypoint.sh /entrypoint.sh
 ENTRYPOINT [ "/entrypoint.sh" ]
 
+COPY --from=closer /pkcs11-closer /
 COPY --from=builder $INSTALL_DIR $INSTALL_DIR
