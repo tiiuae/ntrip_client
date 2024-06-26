@@ -1,5 +1,5 @@
 # Given dynamically from CI job.
-FROM --platform=${BUILDPLATFORM:-linux/amd64} ghcr.io/tiiuae/fog-ros-sdk:v3.2.0-${TARGETARCH:-amd64} AS builder
+FROM --platform=${BUILDPLATFORM:-linux/amd64} ghcr.io/tiiuae/fog-ros-sdk:sha-c66a922-${TARGETARCH:-amd64} AS builder
 
 # Must be defined another time after "FROM" keyword.
 ARG TARGETARCH
@@ -13,7 +13,7 @@ RUN /packaging/build_colcon_sdk.sh ${TARGETARCH:-amd64}
 
 FROM ghcr.io/tiiuae/pkcs11-closer:sha-7bec028 AS closer
 
-FROM ghcr.io/tiiuae/fog-ros-baseimage:v3.2.0
+FROM ghcr.io/tiiuae/fog-ros-baseimage:sha-c66a922
 
 RUN apt-get update \
     && apt-get install -y \
