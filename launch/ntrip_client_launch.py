@@ -37,6 +37,9 @@ def generate_launch_description():
           # ****************************************************************** 
           Node(
                 name='ntrip_client_node',
+                remappings=[
+                    ('/fmu/in/GpsInjectData','/fmu/in/gps_inject_data')
+                ],
                 namespace=DRONE_DEVICE_ID,
                 package='ntrip_client',
                 executable='ntrip_ros.py',
