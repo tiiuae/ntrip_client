@@ -116,6 +116,7 @@ class NTRIPRos(Node):
     # self._create_rtcm_message = self._create_px4_msgs_rtcm_messages
     # Setup the RTCM publisher
     self._rtcm_pub = self.create_publisher(self._rtcm_message_type, '/fmu/in/GpsInjectData', 1000)
+    self._rtcm2_pub = self.create_publisher(self._rtcm_message_type, '/fmu2/in/GpsInjectData', 1000)
     # self._rtcm_pub = self.create_publisher(self._rtcm_message_type, 'rtcm', 1000)
 
     self.get_logger().warning('Workaround print so we get a connection to RTK server.')
@@ -207,6 +208,7 @@ class NTRIPRos(Node):
         )
 
         self._rtcm_pub.publish(msg)
+        self._rtcm_pub2.publish(msg)
 
       else:
         # not used as dropping the messages with length > 300
@@ -235,6 +237,7 @@ class NTRIPRos(Node):
           )
           
           self._rtcm_pub.publish(msg)
+          self._rtcm_pub2.publish(msg)
 
           start += length
 
