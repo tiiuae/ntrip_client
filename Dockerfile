@@ -18,6 +18,7 @@ FROM ghcr.io/tiiuae/fog-ros-baseimage:v3.4.0
 RUN apt-get update \
     && apt-get install -y \
         nmea-msgs \
+        ros-humble-rmw-cyclonedds-cpp \
     && rm -rf /var/lib/apt/lists/*
 
 COPY entrypoint.sh /entrypoint.sh
@@ -25,3 +26,5 @@ ENTRYPOINT [ "/entrypoint.sh" ]
 
 COPY --from=closer /pkcs11-closer /
 COPY --from=builder $INSTALL_DIR $INSTALL_DIR
+
+ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
