@@ -7,7 +7,8 @@ IMAGE="ghcr.io/tiiuae/unitree-go2-ntrip-client"
 echo "--- Building ARM64 on remote-builder ---"
 docker buildx use remote-builder
 docker buildx build \
-  --platform linux/arm64 \
+  --build-arg BUILDPLATFORM=linux/amd64 \
+  --build-arg TARGETARCH=arm64 \
   -t ${IMAGE}:latest-arm64 \
   --push \
   .
@@ -15,7 +16,8 @@ docker buildx build \
 echo "--- Building AMD64 on default builder ---"
 docker buildx use default
 docker buildx build \
-  --platform linux/amd64 \
+  --build-arg BUILDPLATFORM=linux/amd64 \
+  --build-arg TARGETARCH=amd64 \
   -t ${IMAGE}:latest-amd64 \
   --push \
   .
