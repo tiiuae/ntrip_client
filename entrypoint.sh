@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+source /opt/ntrip_client/local_setup.bash
+
 _term() {
     # FILL UP PROCESS SEARCH PATTERN HERE TO FIND PROPER PROCESS FOR SIGINT:
     pattern="ntrip_client/ntrip_ros.py"
@@ -17,7 +19,7 @@ _term() {
 # Use SIGTERM or TERM, does not seem to make any difference.
 trap _term TERM
 
-ros-with-env ros2 launch ntrip_client ntrip_client_launch.py &
+ros2 launch ntrip_client ntrip_client_launch.py &
 child=$!
 
 echo "Waiting for pid $child"

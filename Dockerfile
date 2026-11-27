@@ -1,27 +1,46 @@
-# Given dynamically from CI job.
-FROM --platform=${BUILDPLATFORM:-linux/amd64} ghcr.io/tiiuae/fog-ros-sdk:v3.4.0-${TARGETARCH:-amd64} AS builder
-
-# Must be defined another time after "FROM" keyword.
 ARG TARGETARCH
 
-COPY . $SRC_DIR/ntrip_client
+FROM ghcr.io/tiiuae/tii-px4-msgs:sha-e2978b9-${TARGETARCH:-amd64}-humble AS px4msgs
 
-RUN /packaging/build_colcon_sdk.sh ${TARGETARCH:-amd64}
+FROM ros:humble-ros-core-jammy AS base
 
-#  ▲               runtime ──┐
-#  └── build                 ▼
+RUN --mount=type=bind,from=px4msgs,source=/artifacts,target=/artifacts \
+    apt-get update \
+    && apt-get install -y --no-install-recommends /artifacts/*.deb \
+        python3-numpy \
+        ros-humble-launch-xml \
+        ros-humble-mavros-msgs \
+        ros-humble-nmea-msgs \
+        ros-humble-ros2launch \
+    && rm -rf /var/lib/apt/lists/*
+
+FROM base AS builder
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        python3-colcon-common-extensions \
+        python3-setuptools \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /ws
+COPY . src/ntrip_client
+
+RUN . /opt/ros/humble/setup.sh \
+    && colcon build \
+        --merge-install \
+        --install-base /opt/ntrip_client \
+        --event-handlers console_direct+
 
 FROM ghcr.io/tiiuae/pkcs11-closer:sha-7bec028 AS closer
 
-FROM ghcr.io/tiiuae/fog-ros-baseimage:v3.4.0
+FROM base AS runtime
 
-RUN apt-get update \
-    && apt-get install -y \
-        nmea-msgs \
-    && rm -rf /var/lib/apt/lists/*
-
-COPY entrypoint.sh /entrypoint.sh
-ENTRYPOINT [ "/entrypoint.sh" ]
+WORKDIR /opt/ntrip_client
 
 COPY --from=closer /pkcs11-closer /
-COPY --from=builder $INSTALL_DIR $INSTALL_DIR
+COPY --from=builder /opt/ntrip_client/ /opt/ntrip_client/
+COPY LICENSE /usr/share/doc/ntrip_client/LICENSE
+COPY entrypoint.sh /entrypoint.sh
+
+ENTRYPOINT ["/ros_entrypoint.sh", "/entrypoint.sh"]
+CMD []
